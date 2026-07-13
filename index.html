@@ -5,34 +5,50 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>QPRO 持仓字段筛选</title>
   <style>
-    :root { color-scheme: light dark; font-family: "Microsoft YaHei", "Segoe UI", sans-serif; }
-    body { margin: 24px; color: CanvasText; background: Canvas; }
-    main { max-width: 1440px; margin: auto; }
-    h1 { margin: 0; font-size: 20px; }
+    :root { color-scheme: light; font-family: "Microsoft YaHei", "Segoe UI", sans-serif; }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: #1f2937; background: #f5f7fb; }
+    main { max-width: 1440px; margin: auto; padding: 28px; }
+    h1 { margin: 0; font-size: 24px; letter-spacing: .2px; }
     .header, .summary, .menu-actions, .filter-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-    .header { justify-content: space-between; margin-bottom: 14px; }
-    .status { font-size: 13px; color: GrayText; }
-    .summary { min-height: 28px; margin-bottom: 8px; font-size: 13px; }
-    .mode, .chip { border: 1px solid ButtonBorder; border-radius: 999px; padding: 3px 8px; }
+    .header { justify-content: space-between; margin-bottom: 18px; padding: 22px 24px; border: 1px solid #e5e7eb; border-radius: 12px; background: #fff; box-shadow: 0 1px 2px rgba(15, 23, 42, .04); }
+    .eyebrow { margin-bottom: 5px; color: #2563eb; font-size: 12px; font-weight: 600; letter-spacing: .6px; }
+    .subtitle { margin: 7px 0 0; color: #64748b; font-size: 13px; }
+    .header-actions { display: flex; align-items: center; gap: 10px; }
+    .status { padding: 6px 10px; border-radius: 999px; color: #475569; background: #f1f5f9; font-size: 13px; }
+    .refresh-button { min-height: 34px; padding: 0 12px; border: 1px solid #cbd5e1; border-radius: 6px; color: #334155; background: #fff; font: inherit; cursor: pointer; }
+    .refresh-button:hover { border-color: #2563eb; color: #2563eb; }
+    .summary { min-height: 30px; margin-bottom: 10px; padding: 0 4px; color: #64748b; font-size: 13px; }
+    .mode, .chip { border: 1px solid #cbd5e1; border-radius: 999px; padding: 3px 8px; background: #fff; }
     .mode { display: none; }
     .filter-mode .mode { display: inline-block; color: Highlight; border-color: Highlight; }
     .chip button { margin-left: 4px; border: 0; background: transparent; color: inherit; cursor: pointer; }
-    .table-wrap { overflow: auto; border: 1px solid ButtonBorder; min-height: 380px; }
+    .table-wrap { overflow: auto; border: 1px solid #e2e8f0; border-radius: 10px; min-height: 380px; background: #fff; }
     table { min-width: 1120px; width: 100%; border-collapse: collapse; font-size: 13px; }
-    th, td { padding: 0; border-bottom: 1px solid ButtonBorder; text-align: right; white-space: nowrap; }
-    th { position: sticky; top: 0; z-index: 1; background: Canvas; font-weight: 500; }
+    th, td { padding: 0; border-bottom: 1px solid #edf2f7; text-align: right; white-space: nowrap; }
+    th { position: sticky; top: 0; z-index: 1; background: #f8fafc; color: #475569; font-weight: 600; }
     .header-button { width: 100%; min-height: 34px; display: flex; align-items: center; justify-content: flex-end; gap: 5px; padding: 0 7px; }
     th.left .header-button { justify-content: flex-start; }
     .sort-button { min-height: 28px; padding: 0; border: 0; color: inherit; background: transparent; font: inherit; cursor: pointer; }
-    td { padding: 8px; }
+    tr:hover td { background: #f8fbff; }
+    td { padding: 9px 8px; }
     td.left { text-align: left; }
-    .filter-icon { display: none; width: 18px; height: 18px; padding: 2px; border: 1px solid ButtonBorder; border-radius: 3px; color: GrayText; background: Canvas; cursor: pointer; }
+    .filter-icon { display: none; width: 18px; height: 18px; padding: 2px; border: 1px solid #cbd5e1; border-radius: 3px; color: #64748b; background: #fff; cursor: pointer; }
     .filter-mode .filter-icon { display: inline-flex; align-items: center; justify-content: center; }
     .filter-icon.active { color: HighlightText; background: Highlight; border-color: Highlight; }
     .filter-icon svg { width: 12px; height: 12px; fill: currentColor; }
     .negative { color: #c62828; }
-    .empty { padding: 26px; text-align: center; color: GrayText; }
-    .context-menu, .filter-popover { display: none; position: fixed; z-index: 20; border: 1px solid ButtonBorder; background: Canvas; box-shadow: 0 4px 18px rgba(0,0,0,.22); }
+    .empty { padding: 26px; text-align: center; color: #64748b; }
+    .connection-guide { margin-bottom: 14px; padding: 22px 24px; border: 1px solid #bfdbfe; border-radius: 10px; background: #eff6ff; }
+    .connection-guide h2 { margin: 0 0 7px; color: #1d4ed8; font-size: 17px; }
+    .connection-guide p { margin: 0 0 16px; color: #475569; font-size: 14px; line-height: 1.7; }
+    .connection-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 14px; }
+    .connection-step { padding: 12px; border: 1px solid #dbeafe; border-radius: 8px; background: #fff; font-size: 13px; line-height: 1.6; }
+    .connection-step strong { display: block; margin-bottom: 3px; color: #1e3a8a; }
+    .connection-guide code { display: inline-block; margin-top: 5px; padding: 2px 5px; border-radius: 3px; color: #334155; background: #f1f5f9; font-family: Consolas, monospace; font-size: 12px; }
+    .connection-guide a { color: #2563eb; }
+    .technical-detail { margin-top: 8px; color: #64748b; font-size: 12px; }
+    .context-menu, .filter-popover { display: none; position: fixed; z-index: 20; border: 1px solid #cbd5e1; background: #fff; box-shadow: 0 8px 24px rgba(15,23,42,.16); }
     .context-menu.open, .filter-popover.open { display: block; }
     .context-menu button { display: block; width: 180px; padding: 8px 12px; border: 0; background: transparent; color: inherit; text-align: left; cursor: pointer; }
     .context-menu button:hover { background: Highlight; color: HighlightText; }
@@ -46,16 +62,34 @@
     .number-options { display: grid; grid-template-columns: 74px 1fr; gap: 8px; align-items: center; padding: 10px; }
     .number-options select, .number-options input { min-height: 28px; font: inherit; }
     .filter-actions { justify-content: flex-end; }
-    pre { overflow: auto; padding: 10px; border: 1px solid ButtonBorder; font-size: 12px; }
-    @media (max-width: 640px) { body { margin: 12px; } }
+    pre { overflow: auto; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; background: #fff; font-size: 12px; }
+    @media (max-width: 760px) { main { padding: 12px; } .header { align-items: flex-start; padding: 18px; } .header-actions { margin-top: 12px; } .connection-steps { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
   <main id="app">
     <div class="header">
-      <h1>持仓列表</h1>
-      <span id="status" class="status">正在连接本地 QPRO API…</span>
+      <div>
+        <div class="eyebrow">QPRO 本地数据服务</div>
+        <h1>持仓字段筛选</h1>
+        <p class="subtitle">右键点击表格，进入字段筛选模式；所有持仓数据均留在本机。</p>
+      </div>
+      <div class="header-actions">
+        <span id="status" class="status">正在连接本地服务…</span>
+        <button id="retry" class="refresh-button" type="button">重新连接</button>
+      </div>
     </div>
+    <section id="connection-guide" class="connection-guide" hidden>
+      <h2>暂时无法读取本机持仓</h2>
+      <p>此页面只读取本机已登录 QPRO 的只读数据，不会上传账号或持仓。完成以下步骤后，点击“重新连接”。</p>
+      <div class="connection-steps">
+        <div class="connection-step"><strong>1. 登录 QPRO</strong>打开 QPRO 并完成快期账号登录。</div>
+        <div class="connection-step"><strong>2. 启动本地数据服务</strong>确认 QPRO HTTP Server 已在 <code>127.0.0.1:8811</code> 运行。</div>
+        <div class="connection-step"><strong>3. 启动筛选页服务</strong>运行 <code>node server.mjs</code>，再打开 <code>127.0.0.1:8812</code>。</div>
+      </div>
+      <a href="https://publish2.shinnytech.com/doc/qpro/latest/ai_editor/qpro_httpserver.html#" target="_blank" rel="noreferrer">查看 QPRO HTTP Server 使用说明</a>
+      <details class="technical-detail"><summary>查看连接错误详情</summary><span id="error-details"></span></details>
+    </section>
     <div id="summary" class="summary">
       <span id="mode" class="mode">字段筛选模式</span>
       <span id="row-count"></span>
@@ -315,13 +349,26 @@
       if (!event.target.closest("#context-menu") && !event.target.closest("#filter-popover") && !event.target.closest(".filter-icon")) closeMenus();
     });
 
-    fetch(apiUrl("/api/health")).then(response => response.json()).then(result => {
-      if (!result.ok) throw new Error("服务不可用");
-      return fetchRows();
-    }).then(draw).catch(error => {
-      $("#status").textContent = "本地 API 不可用：" + error.message;
-      $("#result-body").innerHTML = '<tr><td class="empty" colspan="13">' + escapeHtml(error.message) + '</td></tr>';
-    });
+    async function connect() {
+      $("#connection-guide").hidden = true;
+      $("#table-wrap").hidden = false;
+      $("#status").textContent = "正在读取本机持仓…";
+      try {
+        const response = await fetch(apiUrl("/api/health"));
+        const result = await response.json();
+        if (!response.ok || !result.ok) throw new Error("本地数据服务未响应");
+        await fetchRows();
+        draw();
+      } catch (error) {
+        $("#status").textContent = "本地服务未连接";
+        $("#connection-guide").hidden = false;
+        $("#table-wrap").hidden = true;
+        $("#error-details").textContent = error.message || "未知错误";
+      }
+    }
+
+    $("#retry").addEventListener("click", connect);
+    connect();
   </script>
 </body>
 </html>
