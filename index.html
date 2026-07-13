@@ -47,6 +47,8 @@
     .connection-step strong { display: block; margin-bottom: 3px; color: #1e3a8a; }
     .connection-guide code { display: inline-block; margin-top: 5px; padding: 2px 5px; border-radius: 3px; color: #334155; background: #f1f5f9; font-family: Consolas, monospace; font-size: 12px; }
     .connection-guide a { color: #2563eb; }
+    .primary-link { display: inline-flex; min-height: 34px; align-items: center; padding: 0 12px; border-radius: 6px; color: #fff !important; background: #2563eb; font-size: 13px; font-weight: 600; text-decoration: none; }
+    .primary-link:hover { background: #1d4ed8; }
     .technical-detail { margin-top: 8px; color: #64748b; font-size: 12px; }
     .context-menu, .filter-popover { display: none; position: fixed; z-index: 20; border: 1px solid #cbd5e1; background: #fff; box-shadow: 0 8px 24px rgba(15,23,42,.16); }
     .context-menu.open, .filter-popover.open { display: block; }
@@ -85,10 +87,22 @@
       <div class="connection-steps">
         <div class="connection-step"><strong>1. 登录 QPRO</strong>打开 QPRO 并完成快期账号登录。</div>
         <div class="connection-step"><strong>2. 启动本地数据服务</strong>确认 QPRO HTTP Server 已在 <code>127.0.0.1:8811</code> 运行。</div>
-        <div class="connection-step"><strong>3. 启动筛选页服务</strong>运行 <code>node server.mjs</code>，再打开 <code>127.0.0.1:8812</code>。</div>
+        <div class="connection-step"><strong>3. 启动筛选页服务</strong>双击 <code>qpro-position-filter.exe</code>，它会自动打开 <code>127.0.0.1:8812</code>。</div>
       </div>
       <a href="https://publish2.shinnytech.com/doc/qpro/latest/ai_editor/qpro_httpserver.html#" target="_blank" rel="noreferrer">查看 QPRO HTTP Server 使用说明</a>
       <details class="technical-detail"><summary>查看连接错误详情</summary><span id="error-details"></span></details>
+    </section>
+    <section id="remote-guide" class="connection-guide" hidden>
+      <h2>请从本机启动持仓筛选服务</h2>
+      <p>这是功能发布页。为保护交易数据，网页不能直接读取您电脑上的 QPRO 数据；请下载并在本机启动筛选服务。</p>
+      <div class="connection-steps">
+        <div class="connection-step"><strong>1. 下载筛选服务</strong>下载项目压缩包并解压到任意本地目录。</div>
+        <div class="connection-step"><strong>2. 双击启动器</strong>运行 <code>start-position-filter.cmd</code>，它会启动本地筛选服务。</div>
+        <div class="connection-step"><strong>3. 自动打开本地页面</strong>服务会打开 <code>127.0.0.1:8812</code> 并读取本机 QPRO。</div>
+      </div>
+      <a class="primary-link" href="https://github.com/shinny-caiwenqiang/qpro-position-filter/releases/latest/download/qpro-position-filter-windows-x64.zip">下载 Windows 启动器</a>
+      <a href="http://127.0.0.1:8812/">已安装，打开筛选页</a>
+      <a href="https://publish2.shinnytech.com/doc/qpro/latest/ai_editor/qpro_httpserver.html#" target="_blank" rel="noreferrer">QPRO HTTP Server 使用说明</a>
     </section>
     <div id="summary" class="summary">
       <span id="mode" class="mode">字段筛选模式</span>
@@ -174,8 +188,9 @@
     }
 
     // GitHub Pages 上运行时，页面连接用户本机的 Companion；本地直接打开时仍使用同源路径。
-    const localApiOrigin = new URLSearchParams(location.search).get("api")
-      || (location.hostname === "127.0.0.1" || location.hostname === "localhost" ? "" : "http://127.0.0.1:8812");
+    const customApiOrigin = new URLSearchParams(location.search).get("api");
+    const isLocalPage = location.hostname === "127.0.0.1" || location.hostname === "localhost";
+    const localApiOrigin = customApiOrigin || (isLocalPage ? "" : "http://127.0.0.1:8812");
     const apiUrl = (path) => localApiOrigin + path;
 
     async function fetchRows() {
@@ -350,6 +365,14 @@
     });
 
     async function connect() {
+      if (!isLocalPage && !customApiOrigin) {
+        $("#status").textContent = "请在本机启动服务";
+        $("#remote-guide").hidden = false;
+        $("#connection-guide").hidden = true;
+        $("#table-wrap").hidden = true;
+        return;
+      }
+      $("#remote-guide").hidden = true;
       $("#connection-guide").hidden = true;
       $("#table-wrap").hidden = false;
       $("#status").textContent = "正在读取本机持仓…";
