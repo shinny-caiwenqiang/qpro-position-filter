@@ -1,5 +1,6 @@
 node_modules/
 *.log
 build/
-dist/
+dist/*
+!dist/qpro-position-filter-windows-x64.zip
 *.spec
